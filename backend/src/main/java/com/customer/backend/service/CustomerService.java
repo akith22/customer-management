@@ -140,18 +140,38 @@ public class CustomerService {
         }
     }
 
+    /**
+     * Resolves each address DTO's cityName + countryName to a managed City
+     * entity via a single case-insensitive lookup query, then persists the
+     * address. If the city/country combination is not found in master data
+     * an IllegalArgumentException is thrown with a clear user-facing message
+     * so the API returns 400 rather than a 500.
+     */
     private void persistAddresses(Customer customer, List<AddressRequestDTO> addressDTOs) {
         if (addressDTOs == null || addressDTOs.isEmpty()) return;
 
         Set<CustomerAddress> addresses = new HashSet<>();
 
         for (AddressRequestDTO dto : addressDTOs) {
+
+            // Skip entries where the mandatory Line 1 is blank
             if (dto.getAddressLine1() == null
                     || dto.getAddressLine1().trim().isEmpty()) continue;
 
-            City city = cityRepository.findById(dto.getCityId())
+            // Both city and country are required to resolve the master record
+            if (dto.getCityName() == null || dto.getCityName().trim().isEmpty()
+                    || dto.getCountryName() == null || dto.getCountryName().trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "City and Country are required for each address.");
+            }
+
+            City city = cityRepository
+                    .findByCityAndCountry(dto.getCityName().trim(),
+                            dto.getCountryName().trim())
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "City not found with id: " + dto.getCityId()));
+                            "City '" + dto.getCityName().trim() +
+                                    "' in country '" + dto.getCountryName().trim() +
+                                    "' was not found. Please check the spelling."));
 
             CustomerAddress address = new CustomerAddress();
             address.setCustomer(customer);
@@ -202,21 +222,18 @@ public class CustomerService {
         dto.setCreatedAt(c.getCreatedAt());
         dto.setUpdatedAt(c.getUpdatedAt());
 
-        // Mobiles
         List<String> mobiles = new ArrayList<>();
         for (CustomerMobile m : c.getMobiles()) {
             mobiles.add(m.getMobile());
         }
         dto.setMobiles(mobiles);
 
-        // Addresses
         List<AddressResponseDTO> addresses = new ArrayList<>();
         for (CustomerAddress a : c.getAddresses()) {
             addresses.add(toAddressDTO(a));
         }
         dto.setAddresses(addresses);
 
-        // Family members
         List<CustomerResponseDTO.FamilyMemberDTO> familyMembers = new ArrayList<>();
         for (CustomerFamily fl : c.getFamilyLinks()) {
             familyMembers.add(new CustomerResponseDTO.FamilyMemberDTO(

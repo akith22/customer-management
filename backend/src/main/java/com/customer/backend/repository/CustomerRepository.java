@@ -16,7 +16,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     boolean existsByNic(String nic);
 
-    // Fetch single customer with all associations in one query
+    // ── Single customer with all associations in one query ───────────
+    // LEFT JOIN FETCH prevents N+1 on mobiles, addresses, family links.
     @Query("SELECT DISTINCT c FROM Customer c " +
             "LEFT JOIN FETCH c.mobiles " +
             "LEFT JOIN FETCH c.addresses a " +
@@ -27,12 +28,26 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             "WHERE c.id = :id")
     Optional<Customer> findByIdWithDetails(@Param("id") Long id);
 
-    // Paginated summary list — no heavy joins
-    @Query(value = "SELECT c FROM Customer c ORDER BY c.createdAt DESC",
+    // ── Paginated summary list ────────────────────────────────────────
+    // No ORDER BY here — Pageable carries the Sort so the caller controls
+    // sort column and direction. Previously this was hardcoded to
+    // "ORDER BY c.createdAt DESC" which silently ignored the Sort param.
+    @Query(value      = "SELECT c FROM Customer c",
             countQuery = "SELECT COUNT(c) FROM Customer c")
     Page<Customer> findAllSummary(Pageable pageable);
 
-    // Used during bulk upload to check existing NICs in one DB call
+    // ── Bulk upload helpers ──────────────────────────────────────────
+
+    // Single DB round-trip to find which NICs in a chunk already exist.
     @Query("SELECT c.nic FROM Customer c WHERE c.nic IN :nicList")
     List<String> findExistingNics(@Param("nicList") List<String> nicList);
+
+    // Fetch full Customer entities for the NICs we need to UPDATE in bulk.
+    // Returns only the entities that exist — caller maps nic → entity.
+    @Query("SELECT c FROM Customer c WHERE c.nic IN :nicList")
+    List<Customer> findAllByNicIn(@Param("nicList") List<String> nicList);
+
+    // Used by CustomerService to look up a single customer by NIC
+    // (e.g. to validate uniqueness on update without an extra existsBy call).
+    Optional<Customer> findByNic(String nic);
 }

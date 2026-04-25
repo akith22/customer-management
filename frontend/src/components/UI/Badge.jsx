@@ -1,0 +1,5 @@
+import React from 'react';
+
+export default function Badge({ children, variant = 'blue', className = '' }) {
+  return <span className={`badge badge-${variant} ${className}`}>{children}</span>;
+}
