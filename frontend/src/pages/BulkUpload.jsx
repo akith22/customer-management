@@ -1,4 +1,5 @@
 import React, { useState, useRef, useContext } from 'react';
+import { UploadCloud, Download, FileSpreadsheet, X, ChevronDown } from 'lucide-react';
 import { bulkUploadCustomers } from '../api/api';
 import Button from '../components/UI/Button';
 import Spinner from '../components/UI/Spinner';
@@ -80,7 +81,7 @@ export default function BulkUpload() {
       <div className="page-header">
         <h1 className="page-title">Bulk Upload</h1>
         <Button variant="ghost" onClick={downloadTemplate} id="btn-download-template">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <Download size={16} />
           Download Template
         </Button>
       </div>
@@ -94,7 +95,7 @@ export default function BulkUpload() {
           onDrop={handleDrop}
         >
           <div className="upload-zone-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <UploadCloud size={48} strokeWidth={1.5} />
           </div>
           <div className="upload-zone-text">Drag and drop your Excel file here</div>
           <div className="upload-zone-hint">or click to browse -- .xlsx, .xls only</div>
@@ -111,13 +112,13 @@ export default function BulkUpload() {
 
         {file && (
           <div className="file-info">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <FileSpreadsheet size={20} className="text-success" />
             <div>
               <div className="file-name">{file.name}</div>
               <div className="file-size">{formatSize(file.size)}</div>
             </div>
             <button className="btn-icon" style={{ marginLeft: 'auto' }} onClick={() => { setFile(null); setResult(null); }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <X size={16} />
             </button>
           </div>
         )}
@@ -125,7 +126,7 @@ export default function BulkUpload() {
         {file && !uploading && !result && (
           <div className="mt-24">
             <Button full onClick={handleUpload} id="btn-upload">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <UploadCloud size={16} />
               Upload
             </Button>
           </div>
@@ -166,7 +167,7 @@ export default function BulkUpload() {
               <div className="mt-16">
                 <button className="collapsible-toggle" onClick={() => setShowErrors(!showErrors)}>
                   {showErrors ? 'Hide' : 'Show'} Errors ({result.errors.length})
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showErrors ? 'rotate(180deg)' : '', transition: '0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
+                  <ChevronDown size={14} style={{ transform: showErrors ? 'rotate(180deg)' : '', transition: '0.2s' }} />
                 </button>
                 {showErrors && (
                   <div className="collapsible-content">

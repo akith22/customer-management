@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Pagination({ page, totalPages, totalElements, size, onPageChange, onSizeChange }) {
   const sizes = [10, 20, 50];
@@ -24,7 +25,7 @@ export default function Pagination({ page, totalPages, totalElements, size, onPa
           disabled={page === 0}
           onClick={() => onPageChange(page - 1)}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <ChevronLeft size={16} />
           Prev
         </button>
         <button
@@ -33,7 +34,7 @@ export default function Pagination({ page, totalPages, totalElements, size, onPa
           onClick={() => onPageChange(page + 1)}
         >
           Next
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <ChevronRight size={16} />
         </button>
       </div>
     </div>

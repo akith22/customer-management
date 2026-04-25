@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { User, Phone, MapPin, Link as LinkIcon, Edit2 } from 'lucide-react';
 import { getCustomerById } from '../api/api';
 import Badge from '../components/UI/Badge';
 import Spinner from '../components/UI/Spinner';
@@ -32,7 +33,7 @@ export default function CustomerView() {
       <div className="page-header">
         <h1 className="page-title">{customer.name}</h1>
         <Link to={`/customers/${id}/edit`} className="btn btn-primary" id="btn-edit-customer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <Edit2 size={16} />
           Edit
         </Link>
       </div>
@@ -40,7 +41,7 @@ export default function CustomerView() {
       <div className="card">
         <div className="form-section">
           <div className="form-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <User size={18} />
             Customer Details
           </div>
           <div className="detail-grid">
@@ -74,7 +75,7 @@ export default function CustomerView() {
         {/* Mobile Numbers */}
         <div className="form-section">
           <div className="form-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <Phone size={18} />
             Mobile Numbers
           </div>
           {customer.mobiles && customer.mobiles.length > 0 ? (
@@ -91,7 +92,7 @@ export default function CustomerView() {
         {/* Addresses */}
         <div className="form-section">
           <div className="form-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <MapPin size={18} />
             Addresses
           </div>
           {customer.addresses && customer.addresses.length > 0 ? (
@@ -116,7 +117,7 @@ export default function CustomerView() {
         {/* Family Members */}
         <div className="form-section">
           <div className="form-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <LinkIcon size={18} />
             Family Members
           </div>
           {customer.familyMembers && customer.familyMembers.length > 0 ? (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { UploadCloud, Plus, Eye, Edit2, SearchX, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import { getCustomers } from '../api/api';
 import Pagination from '../components/UI/Pagination';
 import { ToastContext } from '../components/Layout/Layout';
@@ -61,8 +62,8 @@ export default function CustomerList() {
   };
 
   const SortArrow = ({ col }) => {
-    if (sortBy !== col) return <span className="sort-icon">&uarr;</span>;
-    return <span className="sort-icon">{direction === 'asc' ? '\u2191' : '\u2193'}</span>;
+    if (sortBy !== col) return <span className="sort-icon"><ArrowUpDown size={14} /></span>;
+    return <span className="sort-icon">{direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}</span>;
   };
 
   return (
@@ -71,11 +72,11 @@ export default function CustomerList() {
         <h1 className="page-title">Customers</h1>
         <div className="flex gap-12">
           <Link to="/bulk-upload" className="btn btn-ghost" id="btn-bulk-upload">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <UploadCloud size={16} />
             Bulk Upload
           </Link>
           <Link to="/customers/new" className="btn btn-primary" id="btn-new-customer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <Plus size={16} />
             New Customer
           </Link>
         </div>
@@ -105,7 +106,7 @@ export default function CustomerList() {
                 <td colSpan={6}>
                   <div className="empty-state">
                     <div className="empty-state-icon">
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                      <SearchX size={48} strokeWidth={1.5} />
                     </div>
                     <div className="empty-state-title">No customers found</div>
                     <div className="empty-state-text">Get started by creating your first customer.</div>
@@ -123,10 +124,10 @@ export default function CustomerList() {
                   <td>
                     <div className="actions">
                       <Link to={`/customers/${c.id}`} className="btn-icon" title="View">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <Eye size={16} />
                       </Link>
                       <Link to={`/customers/${c.id}/edit`} className="btn-icon" title="Edit">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <Edit2 size={16} />
                       </Link>
                     </div>
                   </td>
