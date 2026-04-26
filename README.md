@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🗂️ Customer Management System
+#Customer Management System
 
 **A full-stack platform for creating, managing, and bulk-importing customers**
 
@@ -9,13 +9,30 @@
 ![React](https://img.shields.io/badge/React-19-blue?style=flat-square)
 ![MariaDB](https://img.shields.io/badge/MariaDB-10.6+-teal?style=flat-square)
 ![Maven](https://img.shields.io/badge/Maven-3.6+-red?style=flat-square)
+![Node](https://img.shields.io/badge/Node.js-18+-yellow?style=flat-square)
 ![License](https://img.shields.io/badge/Tests-JUnit_5-purple?style=flat-square)
 
 </div>
 
 ---
 
-## 🚀 Getting Started
+##  Prerequisites
+
+Make sure the following are installed before running the project:
+
+| Tool | Minimum Version | Check Command |
+|---|---|---|
+| Java JDK | 8 | `java -version` |
+| Maven | 3.6+ | `mvn -version` |
+| Node.js | 18+ | `node -v` |
+| npm | 9+ | `npm -v` |
+| MariaDB | 10.6+ | `mariadb --version` |
+
+> The frontend is a **JavaScript** application built with React and bundled via Vite (Node.js). Node.js is required to install dependencies and run the dev server.
+
+---
+
+##  Getting Started
 
 ### Step 1 — Run DDL *(creates database & tables)*
 
@@ -48,7 +65,7 @@ cd backend
 mvn spring-boot:run
 ```
 
-> ✅ API running at **http://localhost:8080**
+>  API running at **http://localhost:8080**
 
 ### Step 5 — Run the Frontend
 
@@ -58,9 +75,9 @@ npm install
 npm run dev
 ```
 
-> ✅ App running at **http://localhost:5173**
+>  App running at **http://localhost:5173**
 
-> ⚠️ Both services must be running at the same time.
+>  Both services must be running at the same time.
 
 ### Step 6 — Run Tests
 
@@ -73,7 +90,7 @@ mvn test
 
 ---
 
-## ✅ What's Implemented
+##  What's Implemented
 
 ### Customer CRUD
 
@@ -88,18 +105,18 @@ mvn test
 
 ### Customer Attributes
 
-- ✅ **Name** — mandatory
-- ✅ **Date of Birth** — mandatory, date selector in UI
-- ✅ **NIC Number** — mandatory, unique across all customers
-- ✅ **Mobile Numbers** — optional, multiple per customer
-- ✅ **Family Members** — link customers to other customers as family
-- ✅ **Addresses** — optional, multiple per customer *(line 1, line 2, city, country)*
-- ✅ **Cities & Countries** — master data tables, loaded in background, not visible on frontend
-- ✅ **Minimal DB Calls** — full record in a single fetch; city list cached; bulk upload uses batch inserts
+-  **Name** — mandatory
+-  **Date of Birth** — mandatory, date selector in UI
+-  **NIC Number** — mandatory, unique across all customers
+-  **Mobile Numbers** — optional, multiple per customer
+-  **Family Members** — link customers to other customers as family
+-  **Addresses** — optional, multiple per customer *(line 1, line 2, city, country)*
+-  **Cities & Countries** — master data tables, loaded in background, not visible on frontend
+-  **Minimal DB Calls** — full record in a single fetch; city list cached; bulk upload uses batch inserts
 
 ---
 
-### 📦 Bulk Upload
+###  Bulk Upload
 
 Upload an `.xlsx` or `.xls` file to create up to **1,000,000 customers** at once.
 
@@ -125,7 +142,7 @@ Upload an `.xlsx` or `.xls` file to create up to **1,000,000 customers** at once
 
 ---
 
-## 🔌 API Endpoints
+##  API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -138,7 +155,7 @@ Upload an `.xlsx` or `.xls` file to create up to **1,000,000 customers** at once
 
 ---
 
-## 🧪 Tests
+##  Tests
 
 | Test | What it covers |
 |---|---|
@@ -151,7 +168,7 @@ Upload an `.xlsx` or `.xls` file to create up to **1,000,000 customers** at once
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology | Version |
 |---|---|---|
@@ -159,7 +176,10 @@ Upload an `.xlsx` or `.xls` file to create up to **1,000,000 customers** at once
 | Backend | Spring Boot | 2.7.18 |
 | Database | MariaDB | 10.6+ |
 | Build | Maven | 3.6+ |
-| Frontend | React + Vite | 19 |
+| Frontend Language | JavaScript (ES6+) | — |
+| Frontend Framework | React + Vite | 19 |
+| Runtime | Node.js | 18+ |
+| Package Manager | npm | 9+ |
 | HTTP Client | Axios | 1.15.x |
 | Excel | Apache POI | 5.2.5 |
 | Testing | JUnit 5 + Spring Boot Test | — |
