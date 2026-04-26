@@ -1,6 +1,6 @@
 <div align="center">
 
-# Customer Management System
+# ClientSphere-Customer Management System
 
 **A full-stack platform for creating, managing, and bulk-importing customers**
 
@@ -83,7 +83,7 @@ npm run dev
 
 ```bash
 cd backend
-mvn test
+.\mvnw.cmd test
 ```
 
 > Uses H2 in-memory database — no MariaDB connection required.
