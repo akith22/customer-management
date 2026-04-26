@@ -1,6 +1,6 @@
 <div align="center">
 
-#Customer Management System
+# Customer Management System
 
 **A full-stack platform for creating, managing, and bulk-importing customers**
 
