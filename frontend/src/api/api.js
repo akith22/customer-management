@@ -8,6 +8,20 @@ export function getCustomers(page = 0, size = 20, sortBy = 'createdAt', directio
   return api.get('/api/customers', { params: { page, size, sortBy, direction } });
 }
 
+export function searchCustomers(query, size = 20) {
+  const trimmed = query.trim();
+  if (!trimmed) return Promise.resolve({ data: { content: [] } });
+  const isId = /^\d+$/.test(trimmed);
+  if (isId) {
+    return api.get(`/api/customers/${trimmed}`).then(res => ({
+      data: { content: [res.data] }
+    })).catch(() => ({ data: { content: [] } }));
+  }
+  return api.get('/api/customers', {
+    params: { page: 0, size, sortBy: 'name', direction: 'asc', name: trimmed }
+  });
+}
+
 export function getCustomerById(id) {
   return api.get(`/api/customers/${id}`);
 }

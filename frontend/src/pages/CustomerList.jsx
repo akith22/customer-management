@@ -82,7 +82,7 @@ export default function CustomerList() {
         </div>
       </div>
 
-      <div className="table-wrapper">
+      <div className="table-wrapper" style={{ borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0' }}>
         <table className="table" id="customer-table">
           <thead>
             <tr>

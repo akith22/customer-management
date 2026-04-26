@@ -18,7 +18,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
- * Handles bulk customer creation and update from an Excel file.
+ * Handles bulk customer creation from an Excel file.
  *
  * Design decisions:
  *
@@ -34,13 +34,12 @@ import java.util.*;
  *     annotation is silently ignored. Injecting 'self' via @Lazy resolves
  *     the circular dependency and routes the call through the proxy.
  *
- *  3. CREATE vs UPDATE — if a NIC already exists in the database the row is
- *     treated as an update (name + DOB are overwritten). The original code
- *     skipped duplicates entirely, which violated the assignment spec.
+ *  3. CREATE ONLY — if a NIC already exists in the database the row is
+ *     marked as failed and an error is recorded.
  *
  *  4. SINGLE NIC-EXISTENCE CHECK PER CHUNK — instead of one SELECT per row
- *     we fire one IN-query for the entire chunk's NIC list and then separate
- *     the batch into inserts vs updates in memory.
+ *     we fire one IN-query for the entire chunk's NIC list and separate rows
+ *     into insert vs failed in memory.
  */
 @Service
 public class BulkUploadService {
@@ -87,8 +86,9 @@ public class BulkUploadService {
             int lastRow = sheet.getLastRowNum(); // 0-indexed; row 0 is header
             result.setTotalRows(lastRow);        // data rows = lastRowNum
 
-            List<Customer> batch    = new ArrayList<>(CHUNK_SIZE);
-            Set<String>    batchNics = new LinkedHashSet<>(CHUNK_SIZE);
+            List<Customer> batch = new ArrayList<>(CHUNK_SIZE);
+            Set<String> batchNics = new LinkedHashSet<>(CHUNK_SIZE);
+            Map<String, Integer> rowNumberByNic = new HashMap<>(CHUNK_SIZE);
 
             for (int i = 1; i <= lastRow; i++) {
 
@@ -111,6 +111,7 @@ public class BulkUploadService {
                     }
 
                     batchNics.add(nic);
+                    rowNumberByNic.put(nic, i + 1);
                     batch.add(candidate);
 
                 } catch (IllegalArgumentException e) {
@@ -120,15 +121,16 @@ public class BulkUploadService {
 
                 if (batch.size() >= CHUNK_SIZE) {
                     // Route through self proxy so @Transactional is honoured
-                    self.flushChunk(batch, result);
+                    self.flushChunk(batch, rowNumberByNic, result);
                     batch.clear();
                     batchNics.clear();
+                    rowNumberByNic.clear();
                 }
             }
 
             // Flush the final partial batch
             if (!batch.isEmpty()) {
-                self.flushChunk(batch, result);
+                self.flushChunk(batch, rowNumberByNic, result);
             }
 
         } catch (Exception e) {
@@ -145,12 +147,15 @@ public class BulkUploadService {
      * {@code self.flushChunk(...)}) so that @Transactional takes effect.
      *
      * Strategy:
-     *  - One IN-query to find which NICs already exist → update those.
+     *  - One IN-query to find which NICs already exist → fail those rows.
      *  - Everything else → insert.
      *  - One saveAll call for the entire chunk.
      */
     @Transactional
-    public void flushChunk(List<Customer> batch, BulkUploadResultDTO result) {
+    public void flushChunk(
+            List<Customer> batch,
+            Map<String, Integer> rowNumberByNic,
+            BulkUploadResultDTO result) {
 
         // Collect NICs in this chunk
         List<String> chunkNics = new ArrayList<>(batch.size());
@@ -172,11 +177,9 @@ public class BulkUploadService {
             Customer existing = existingByNic.get(candidate.getNic());
 
             if (existing != null) {
-                // UPDATE — overwrite mutable fields, keep ID and audit dates
-                existing.setName(candidate.getName());
-                existing.setDob(candidate.getDob());
-                toSave.add(existing);
-                result.incrementUpdated();
+                Integer rowNumber = rowNumberByNic.get(candidate.getNic());
+                result.incrementFailed();
+                result.addError("Row " + (rowNumber != null ? rowNumber : "?") + ": NIC already exists");
             } else {
                 // INSERT — brand-new customer
                 toSave.add(candidate);

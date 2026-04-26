@@ -80,14 +80,15 @@ public class CustomerController {
             @RequestParam(defaultValue = "0")  int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction) {
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false) String name) {
         try {
             Sort sort = direction.equalsIgnoreCase("asc")
                     ? Sort.by(sortBy).ascending()
                     : Sort.by(sortBy).descending();
 
             Pageable pageable = PageRequest.of(page, size, sort);
-            Page<CustomerSummaryDTO> response = customerService.getAllCustomers(pageable);
+            Page<CustomerSummaryDTO> response = customerService.getAllCustomers(pageable, name);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,

@@ -1,193 +1,168 @@
-/*package com.customer.backend.repository;
+package com.customer.backend.repository;
 
+import com.customer.backend.model.City;
+import com.customer.backend.model.Country;
 import com.customer.backend.model.Customer;
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Repository-layer tests using an H2 in-memory database.
+ *
+ * @TestPropertySource explicitly loads the application-test.properties
+ * to configure the embedded H2 database and hibernate properties.
+ * @DirtiesContext ensures a clean context after this class completes.
+ */
+@DataJpaTest
+@TestPropertySource(locations = "classpath:application-test.properties")
+@EntityScan(basePackages = "com.customer.backend.model")
+@DirtiesContext
 class CustomerRepositoryTest {
 
-    @Mock
+    @Autowired
     private CustomerRepository customerRepository;
 
-    // ── existsByNic ──────────────────────────────────────────────────
+    @Autowired
+    private TestEntityManager entityManager;
 
-    @Test
-    @DisplayName("existsByNic: returns true when NIC is found")
-    void existsByNic_returnsTrue() {
-        when(customerRepository.existsByNic("NIC001")).thenReturn(true);
+    private Long aliceId;
 
-        assertTrue(customerRepository.existsByNic("NIC001"));
-        verify(customerRepository, times(1)).existsByNic("NIC001");
+    @BeforeEach
+    void setUp() {
+        Country country = new Country();
+        country.setName("Sri Lanka");
+        country.setCode("LK");
+        entityManager.persist(country);
+
+        City city = new City();
+        city.setName("Colombo");
+        city.setCountry(country);
+        entityManager.persist(city);
+
+        Customer alice = new Customer();
+        alice.setName("Alice");
+        alice.setNic("199001512345");
+        alice.setDob(LocalDate.of(1990, 1, 15));
+        entityManager.persist(alice);
+
+        Customer bob = new Customer();
+        bob.setName("Bob");
+        bob.setNic("850620123V");
+        bob.setDob(LocalDate.of(1985, 6, 20));
+        entityManager.persist(bob);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        aliceId = alice.getId();
     }
 
     @Test
-    @DisplayName("existsByNic: returns false when NIC is not found")
-    void existsByNic_returnsFalse() {
-        when(customerRepository.existsByNic("UNKNOWN")).thenReturn(false);
-
-        assertFalse(customerRepository.existsByNic("UNKNOWN"));
+    void existsByNic_existingNic_returnsTrue() {
+        assertTrue(customerRepository.existsByNic("199001512345"));
     }
 
-    // ── findByIdWithDetails ──────────────────────────────────────────
+    @Test
+    void existsByNic_unknownNic_returnsFalse() {
+        assertFalse(customerRepository.existsByNic("000000000000"));
+    }
 
     @Test
-    @DisplayName("findByIdWithDetails: returns customer when found")
-    void findByIdWithDetails_returnsCustomer() {
-        Customer customer = new Customer();
-        customer.setId(1L);
-        customer.setName("Alice");
-        customer.setNic("NIC001");
-        customer.setDob(LocalDate.of(1990, 5, 20));
-
-        when(customerRepository.findByIdWithDetails(1L))
-                .thenReturn(Optional.of(customer));
-
-        Optional<Customer> result = customerRepository.findByIdWithDetails(1L);
-
+    void findByIdWithDetails_existingId_returnsCustomerWithAssociations() {
+        Optional<Customer> result = customerRepository.findByIdWithDetails(aliceId);
         assertTrue(result.isPresent());
-        assertEquals("Alice",  result.get().getName());
-        assertEquals("NIC001", result.get().getNic());
+        assertEquals("Alice", result.get().getName());
     }
 
     @Test
-    @DisplayName("findByIdWithDetails: returns empty when not found")
-    void findByIdWithDetails_returnsEmpty() {
-        when(customerRepository.findByIdWithDetails(99L))
-                .thenReturn(Optional.empty());
-
-        Optional<Customer> result = customerRepository.findByIdWithDetails(99L);
-
+    void findByIdWithDetails_unknownId_returnsEmpty() {
+        Optional<Customer> result = customerRepository.findByIdWithDetails(99999L);
         assertFalse(result.isPresent());
     }
 
-    // ── findAllSummary ───────────────────────────────────────────────
-
     @Test
-    @DisplayName("findAllSummary: returns paginated list of customers")
-    void findAllSummary_returnsPaginatedList() {
-        Customer c1 = new Customer();
-        c1.setId(1L);
-        c1.setName("Alice");
-
-        Customer c2 = new Customer();
-        c2.setId(2L);
-        c2.setName("Bob");
-
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Customer> page = new PageImpl<>(Arrays.asList(c1, c2), pageable, 2);
-
-        when(customerRepository.findAllSummary(pageable)).thenReturn(page);
-
-        Page<Customer> result = customerRepository.findAllSummary(pageable);
-
-        assertEquals(2, result.getTotalElements());
-        assertEquals("Alice", result.getContent().get(0).getName());
-        assertEquals("Bob",   result.getContent().get(1).getName());
+    void findAllSummary_returnsPagedResults() {
+        Page<Customer> page = customerRepository.findAllSummary(
+                PageRequest.of(0, 10, Sort.by("name").ascending())
+        );
+        assertEquals(2, page.getTotalElements());
     }
 
     @Test
-    @DisplayName("findAllSummary: returns empty page when no customers")
-    void findAllSummary_returnsEmptyPage() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Customer> emptyPage = new PageImpl<>(new ArrayList<>(), pageable, 0);
-
-        when(customerRepository.findAllSummary(pageable)).thenReturn(emptyPage);
-
-        Page<Customer> result = customerRepository.findAllSummary(pageable);
-
-        assertTrue(result.getContent().isEmpty());
-        assertEquals(0, result.getTotalElements());
-    }
-
-    // ── findExistingNics ─────────────────────────────────────────────
-
-    @Test
-    @DisplayName("findExistingNics: returns only NICs that exist in DB")
-    void findExistingNics_returnsMatchingNics() {
-        List<String> input = Arrays.asList("NIC001", "NIC002", "NIC999");
-
-        when(customerRepository.findExistingNics(input))
-                .thenReturn(Arrays.asList("NIC001", "NIC002"));
-
-        List<String> result = customerRepository.findExistingNics(input);
-
-        assertEquals(2, result.size());
-        assertTrue(result.contains("NIC001"));
-        assertTrue(result.contains("NIC002"));
-        assertFalse(result.contains("NIC999"));
+    void findAllSummaryByName_partialMatch_returnsMatchingCustomers() {
+        Page<Customer> page = customerRepository.findAllSummaryByName("ali", PageRequest.of(0, 10));
+        assertEquals(1, page.getTotalElements());
+        assertEquals("Alice", page.getContent().get(0).getName());
     }
 
     @Test
-    @DisplayName("findExistingNics: returns empty list when no NICs match")
-    void findExistingNics_returnsEmpty() {
-        List<String> input = Arrays.asList("NEW001", "NEW002");
-
-        when(customerRepository.findExistingNics(input))
-                .thenReturn(new ArrayList<>());
-
-        List<String> result = customerRepository.findExistingNics(input);
-
-        assertTrue(result.isEmpty());
+    void findAllSummaryByName_noMatch_returnsEmpty() {
+        Page<Customer> page = customerRepository.findAllSummaryByName("xyz", PageRequest.of(0, 10));
+        assertEquals(0, page.getTotalElements());
     }
 
     @Test
-    @DisplayName("findExistingNics: handles empty input list")
-    void findExistingNics_emptyInput_returnsEmpty() {
-        List<String> emptyInput = new ArrayList<>();
-
-        when(customerRepository.findExistingNics(emptyInput))
-                .thenReturn(new ArrayList<>());
-
-        List<String> result = customerRepository.findExistingNics(emptyInput);
-
-        assertTrue(result.isEmpty());
+    void findAllSummaryByName_caseInsensitive_returnsMatch() {
+        Page<Customer> page = customerRepository.findAllSummaryByName("ALICE", PageRequest.of(0, 10));
+        assertEquals(1, page.getTotalElements());
     }
 
-    // ── save / findById (basic JpaRepository) ───────────────────────
+    @Test
+    void findExistingNics_partialList_returnsOnlyMatching() {
+        List<String> nics = customerRepository.findExistingNics(
+                Arrays.asList("199001512345", "DOESNOTEXIST")
+        );
+        assertEquals(1, nics.size());
+        assertTrue(nics.contains("199001512345"));
+    }
 
     @Test
-    @DisplayName("save: persists customer and returns saved entity")
-    void save_persistsCustomer() {
+    void findAllByNicIn_multipleNics_returnsEntities() {
+        List<Customer> customers = customerRepository.findAllByNicIn(
+                Arrays.asList("199001512345", "850620123V")
+        );
+        assertEquals(2, customers.size());
+    }
+
+    @Test
+    void findByNic_existing_returnsCustomer() {
+        Optional<Customer> result = customerRepository.findByNic("199001512345");
+        assertTrue(result.isPresent());
+        assertEquals("Alice", result.get().getName());
+    }
+
+    @Test
+    void findByNic_unknown_returnsEmpty() {
+        Optional<Customer> result = customerRepository.findByNic("000000000000");
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    void save_newCustomer_persistsAndAssignsId() {
         Customer customer = new Customer();
         customer.setName("Carol");
-        customer.setNic("NIC_CAROL");
-        customer.setDob(LocalDate.of(1995, 8, 15));
+        customer.setNic("200003101234");
+        customer.setDob(LocalDate.of(2000, 3, 10));
 
-        Customer saved = new Customer();
-        saved.setId(10L);
-        saved.setName("Carol");
-        saved.setNic("NIC_CAROL");
-        saved.setDob(LocalDate.of(1995, 8, 15));
+        Customer saved = customerRepository.saveAndFlush(customer);
 
-        when(customerRepository.save(customer)).thenReturn(saved);
-
-        Customer result = customerRepository.save(customer);
-
-        assertNotNull(result.getId());
-        assertEquals(10L,       result.getId());
-        assertEquals("Carol",   result.getName());
-        assertEquals("NIC_CAROL", result.getNic());
+        assertNotNull(saved.getId());
+        assertTrue(customerRepository.existsByNic("200003101234"));
     }
-
-    @Test
-    @DisplayName("findById: returns empty when customer does not exist")
-    void findById_notFound_returnsEmpty() {
-        when(customerRepository.findById(999L)).thenReturn(Optional.empty());
-
-        Optional<Customer> result = customerRepository.findById(999L);
-
-        assertFalse(result.isPresent());
-    }
-}*/
+}

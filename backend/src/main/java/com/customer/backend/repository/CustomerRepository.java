@@ -36,6 +36,10 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             countQuery = "SELECT COUNT(c) FROM Customer c")
     Page<Customer> findAllSummary(Pageable pageable);
 
+    @Query(value      = "SELECT c FROM Customer c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))",
+            countQuery = "SELECT COUNT(c) FROM Customer c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Page<Customer> findAllSummaryByName(@Param("name") String name, Pageable pageable);
+
     // ── Bulk upload helpers ──────────────────────────────────────────
 
     // Single DB round-trip to find which NICs in a chunk already exist.

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronLeft, Home } from 'lucide-react';
 
 function buildBreadcrumbs(pathname) {
   if (pathname === '/dashboard') return [{ label: 'Customers', path: '/dashboard' }];
@@ -27,23 +28,39 @@ function buildBreadcrumbs(pathname) {
 
 export default function TopBar({ title }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const breadcrumbs = buildBreadcrumbs(location.pathname);
+  const showBack = location.pathname !== '/dashboard';
 
   return (
     <header className="topbar">
-      <div className="topbar-breadcrumb">
-        {breadcrumbs.map((crumb, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <span className="separator">/</span>}
-            {crumb.path ? (
-              <Link to={crumb.path}>{crumb.label}</Link>
-            ) : (
-              <span className="current">{title || crumb.label}</span>
-            )}
-          </React.Fragment>
-        ))}
+      <div className="topbar-left">
+        {showBack && (
+          <button className="topbar-back-btn" onClick={() => navigate(-1)} title="Go back">
+            <ChevronLeft size={18} />
+            <span>Back</span>
+          </button>
+        )}
+        <div className="topbar-breadcrumb">
+          {breadcrumbs.map((crumb, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <span className="separator">/</span>}
+              {crumb.path ? (
+                <Link to={crumb.path}>{crumb.label}</Link>
+              ) : (
+                <span className="current">{title || crumb.label}</span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
-      <div className="topbar-actions" />
+
+      <div className="topbar-actions">
+        <Link to="/" className="topbar-home-btn" title="Go to landing page">
+          <Home size={16} />
+          <span>Home</span>
+        </Link>
+      </div>
     </header>
   );
 }

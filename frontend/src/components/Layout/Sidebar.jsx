@@ -1,13 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, UploadCloud, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Users, UploadCloud, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const navItems = [
-  {
-    label: 'Dashboard',
-    path: '/dashboard',
-    icon: <LayoutDashboard size={20} />,
-  },
   {
     label: 'Customers',
     path: '/dashboard',
@@ -25,8 +20,8 @@ export default function Sidebar({ collapsed, onToggle }) {
 
   const isActive = (path, label) => {
     if (label === 'Bulk Upload') return location.pathname === '/bulk-upload';
-    if (label === 'Dashboard' || label === 'Customers') {
-      return location.pathname === '/dashboard' || (location.pathname.startsWith('/customers') && label === 'Customers');
+    if (label === 'Customers') {
+      return location.pathname === '/dashboard' || location.pathname.startsWith('/customers');
     }
     return false;
   };

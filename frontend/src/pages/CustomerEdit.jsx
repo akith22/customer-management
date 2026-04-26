@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { User, Phone, MapPin, Link as LinkIcon, Plus, X, Check } from 'lucide-react';
-import { getCustomerById, updateCustomer } from '../api/api';
+import { getCustomerById, updateCustomer, searchCustomers } from '../api/api';
 import Input from '../components/UI/Input';
 import Button from '../components/UI/Button';
 import Spinner from '../components/UI/Spinner';
@@ -21,7 +21,13 @@ export default function CustomerEdit() {
   const [mobiles, setMobiles] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [familyMembers, setFamilyMembers] = useState([]);
-  const [familySearch, setFamilySearch] = useState({ show: false, id: '', loading: false, result: null, error: '' });
+  const [familySearch, setFamilySearch] = useState({
+    show: false,
+    query: '',
+    loading: false,
+    results: [],
+    error: '',
+  });
 
   useEffect(() => {
     (async () => {
@@ -99,34 +105,38 @@ export default function CustomerEdit() {
     const a = [...addresses]; a[i] = { ...a[i], [field]: val }; setAddresses(a);
   };
 
-  const lookupFamily = async () => {
-    if (!familySearch.id) return;
-    const numId = Number(familySearch.id);
-    if (numId === Number(id)) {
-      setFamilySearch(s => ({ ...s, error: 'Cannot link to self' }));
+  const searchFamily = async (query) => {
+    if (!query || query.trim().length < 1) {
+      setFamilySearch(s => ({ ...s, results: [], error: '' }));
       return;
     }
-    if (familyMembers.find(f => f.id === numId)) {
+    setFamilySearch(s => ({ ...s, loading: true, results: [], error: '' }));
+    try {
+      const res = await searchCustomers(query.trim(), 8);
+      const customers = res.data?.content || [];
+      setFamilySearch(s => ({
+        ...s,
+        loading: false,
+        results: customers,
+        error: customers.length === 0 ? 'No customers found' : '',
+      }));
+    } catch {
+      setFamilySearch(s => ({ ...s, loading: false, results: [], error: 'Search failed' }));
+    }
+  };
+
+  const confirmFamily = (customer) => {
+    if (familyMembers.find(f => f.id === customer.id)) {
       setFamilySearch(s => ({ ...s, error: 'Already linked' }));
       return;
     }
-    setFamilySearch(s => ({ ...s, loading: true, result: null, error: '' }));
-    try {
-      const res = await getCustomerById(numId);
-      setFamilySearch(s => ({ ...s, loading: false, result: res.data }));
-    } catch {
-      setFamilySearch(s => ({ ...s, loading: false, error: 'Customer not found' }));
-    }
+    setFamilyMembers([...familyMembers, { id: customer.id, name: customer.name, nic: customer.nic }]);
+    setFamilySearch({ show: false, query: '', loading: false, results: [], error: '' });
   };
 
-  const confirmFamily = () => {
-    if (familySearch.result) {
-      setFamilyMembers([...familyMembers, { id: familySearch.result.id, name: familySearch.result.name, nic: familySearch.result.nic }]);
-      setFamilySearch({ show: false, id: '', loading: false, result: null, error: '' });
-    }
+  const cancelFamilySearch = () => {
+    setFamilySearch({ show: false, query: '', loading: false, results: [], error: '' });
   };
-
-  const cancelFamilySearch = () => setFamilySearch({ show: false, id: '', loading: false, result: null, error: '' });
   const removeFamily = (fid) => setFamilyMembers(familyMembers.filter(f => f.id !== fid));
 
   const nicValid = form.nic && NIC_REGEX.test(form.nic);
@@ -149,7 +159,19 @@ export default function CustomerEdit() {
           </div>
           <div className="form-grid">
             <Input id="input-name" label="Name" placeholder="Enter full name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} error={errors.name} />
-            <Input id="input-dob" label="Date of Birth" type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })} error={errors.dob} />
+            <div className="input-group">
+              <label htmlFor="input-dob">Date of Birth</label>
+              <input
+                id="input-dob"
+                className={`input${errors.dob ? ' error' : ''}`}
+                type="date"
+                value={form.dob}
+                max={new Date().toISOString().split('T')[0]}
+                min="1900-01-01"
+                onChange={e => setForm({ ...form, dob: e.target.value })}
+              />
+              {errors.dob && <span className="input-error">{errors.dob}</span>}
+            </div>
             <div className="input-group">
               <label>NIC Number</label>
               <div style={{ position: 'relative' }}>
@@ -222,22 +244,60 @@ export default function CustomerEdit() {
             </div>
           ))}
           {familySearch.show && (
-            <div className="input-row mb-8" style={{ alignItems: 'flex-start' }}>
-              <Input id="input-family-id" placeholder="Enter Customer ID" type="number" value={familySearch.id} onChange={e => setFamilySearch(s => ({ ...s, id: e.target.value, error: '', result: null }))} min="1" />
-              <Button type="button" variant="ghost" size="sm" onClick={lookupFamily} disabled={familySearch.loading || !familySearch.id}>
-                {familySearch.loading ? <Spinner size="sm" /> : 'Lookup'}
-              </Button>
-              <button type="button" className="btn-icon" onClick={cancelFamilySearch} title="Cancel">
-                <X size={16} />
-              </button>
-            </div>
-          )}
-          {familySearch.error && <div className="input-error mb-8">{familySearch.error}</div>}
-          {familySearch.result && (
-            <div className="chip mb-8" style={{ background: 'rgba(34,197,94,0.1)', borderColor: 'rgba(34,197,94,0.2)' }}>
-              <span>{familySearch.result.name} ({familySearch.result.nic})</span>
-              <button type="button" className="chip-remove" onClick={confirmFamily} style={{ color: 'var(--success)' }} title="Confirm"><Check size={16} strokeWidth={2.5} /></button>
-              <button type="button" className="chip-remove" onClick={cancelFamilySearch} title="Cancel"><X size={14} /></button>
+            <div className="family-search-wrapper">
+              <div className="input-row mb-8" style={{ alignItems: 'flex-start' }}>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <input
+                    id="input-family-search"
+                    className="input"
+                    placeholder="Search by name or ID..."
+                    value={familySearch.query}
+                    onChange={e => {
+                      const q = e.target.value;
+                      setFamilySearch(s => ({ ...s, query: q }));
+                      searchFamily(q);
+                    }}
+                    autoComplete="off"
+                  />
+                </div>
+                <button type="button" className="btn-icon" onClick={cancelFamilySearch} title="Cancel">
+                  <X size={16} />
+                </button>
+              </div>
+
+              {familySearch.loading && (
+                <div style={{ padding: '8px 0', color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Spinner size="sm" /> Searching...
+                </div>
+              )}
+
+              {familySearch.error && !familySearch.loading && (
+                <div className="input-error mb-8">{familySearch.error}</div>
+              )}
+
+              {!familySearch.loading && familySearch.results.length > 0 && (
+                <div className="family-search-results">
+                  {familySearch.results.map(customer => (
+                    <button
+                      key={customer.id}
+                      type="button"
+                      className="family-search-result-item"
+                      onClick={() => confirmFamily(customer)}
+                      disabled={!!familyMembers.find(f => f.id === customer.id)}
+                    >
+                      <div className="family-result-info">
+                        <span className="family-result-name">{customer.name}</span>
+                        <span className="family-result-meta">ID: {customer.id} · {customer.nic}</span>
+                      </div>
+                      {familyMembers.find(f => f.id === customer.id) ? (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Added</span>
+                      ) : (
+                        <Check size={14} style={{ color: 'var(--accent-blue)' }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {!familySearch.show && (

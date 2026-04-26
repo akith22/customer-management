@@ -9,6 +9,7 @@ import com.customer.backend.dto.response.CustomerResponseDTO;
 import com.customer.backend.dto.response.CustomerSummaryDTO;
 import com.customer.backend.model.*;
 import com.customer.backend.repository.*;
+import com.customer.backend.repository.CountryRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,17 +28,20 @@ public class CustomerService {
     private final CustomerAddressRepository addressRepository;
     private final CustomerFamilyRepository  familyRepository;
     private final CityRepository            cityRepository;
+    private final CountryRepository         countryRepository;
 
     public CustomerService(CustomerRepository customerRepository,
                            CustomerMobileRepository mobileRepository,
                            CustomerAddressRepository addressRepository,
                            CustomerFamilyRepository familyRepository,
-                           CityRepository cityRepository) {
+                           CityRepository cityRepository,
+                           CountryRepository countryRepository) {
         this.customerRepository = customerRepository;
         this.mobileRepository   = mobileRepository;
         this.addressRepository  = addressRepository;
         this.familyRepository   = familyRepository;
         this.cityRepository     = cityRepository;
+        this.countryRepository  = countryRepository;
     }
 
     // ── CREATE ───────────────────────────────────────────────────────
@@ -123,6 +127,23 @@ public class CustomerService {
                 ));
     }
 
+    @Transactional(readOnly = true)
+    public Page<CustomerSummaryDTO> getAllCustomers(Pageable pageable, String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return getAllCustomers(pageable);
+        }
+
+        return customerRepository.findAllSummaryByName(name.trim(), pageable)
+                .map(c -> new CustomerSummaryDTO(
+                        c.getId(),
+                        c.getName(),
+                        c.getDob(),
+                        c.getNic(),
+                        c.getCreatedAt(),
+                        c.getUpdatedAt()
+                ));
+    }
+
     // ── PRIVATE HELPERS ──────────────────────────────────────────────
 
     private void persistMobiles(Customer customer, List<MobileRequestDTO> mobileDTOs) {
@@ -141,11 +162,9 @@ public class CustomerService {
     }
 
     /**
-     * Resolves each address DTO's cityName + countryName to a managed City
-     * entity via a single case-insensitive lookup query, then persists the
-     * address. If the city/country combination is not found in master data
-     * an IllegalArgumentException is thrown with a clear user-facing message
-     * so the API returns 400 rather than a 500.
+     * Resolves each address DTO's cityName + countryName to a City entity.
+     * If the city/country combination doesn't exist in master data it is
+     * created automatically, so users are never blocked by missing seed data.
      */
     private void persistAddresses(Customer customer, List<AddressRequestDTO> addressDTOs) {
         if (addressDTOs == null || addressDTOs.isEmpty()) return;
@@ -158,20 +177,46 @@ public class CustomerService {
             if (dto.getAddressLine1() == null
                     || dto.getAddressLine1().trim().isEmpty()) continue;
 
-            // Both city and country are required to resolve the master record
+            // Both city and country are required
             if (dto.getCityName() == null || dto.getCityName().trim().isEmpty()
                     || dto.getCountryName() == null || dto.getCountryName().trim().isEmpty()) {
                 throw new IllegalArgumentException(
                         "City and Country are required for each address.");
             }
 
+            String cityName    = dto.getCityName().trim();
+            String countryName = dto.getCountryName().trim();
+
+            // Look up city; if not found, auto-create country + city
             City city = cityRepository
-                    .findByCityAndCountry(dto.getCityName().trim(),
-                            dto.getCountryName().trim())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "City '" + dto.getCityName().trim() +
-                                    "' in country '" + dto.getCountryName().trim() +
-                                    "' was not found. Please check the spelling."));
+                    .findByCityAndCountry(cityName, countryName)
+                    .orElseGet(() -> {
+                        // Find or create the country
+                        Country country = countryRepository
+                                .findByNameIgnoreCase(countryName)
+                                .orElseGet(() -> {
+                                    Country newCountry = new Country();
+                                    newCountry.setName(countryName);
+                                    // Generate a simple code from the name (first 3 chars upper-cased)
+                                    String baseCode = countryName.replaceAll("\\s+", "")
+                                            .toUpperCase()
+                                            .substring(0, Math.min(3, countryName.replaceAll("\\s+", "").length()));
+                                    // Ensure uniqueness by appending a suffix if needed
+                                    String code = baseCode;
+                                    int suffix = 1;
+                                    while (countryRepository.existsByCode(code)) {
+                                        code = baseCode + suffix++;
+                                    }
+                                    newCountry.setCode(code);
+                                    return countryRepository.save(newCountry);
+                                });
+
+                        // Create the city under that country
+                        City newCity = new City();
+                        newCity.setName(cityName);
+                        newCity.setCountry(country);
+                        return cityRepository.save(newCity);
+                    });
 
             CustomerAddress address = new CustomerAddress();
             address.setCustomer(customer);

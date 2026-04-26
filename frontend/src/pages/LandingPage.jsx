@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BarChart2, Users, UploadCloud, Shield, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, BarChart2, Users, UploadCloud, Shield } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -17,38 +17,29 @@ export default function LandingPage() {
         </div>
         <div className="landing-nav-links">
           <a href="#features">Features</a>
-          <a href="#pricing">Pricing</a>
         </div>
         <div className="landing-nav-actions">
-          <Link to="/dashboard" className="btn btn-ghost">Sign In</Link>
-          <Link to="/dashboard" className="btn btn-primary">Get Started</Link>
+          <Link to="/dashboard" className="btn btn-primary">Go to App</Link>
         </div>
       </nav>
 
       <header className="hero-section">
         <div className="hero-content">
-          <div className="hero-badge">New: AI-Powered Insights v2.0</div>
-          <h1 className="hero-title">Manage your customers with <span>unrivaled precision.</span></h1>
+          <h1 className="hero-title">Your Customers. <span>Managed Perfectly.</span></h1>
           <p className="hero-subtitle">
-            ClientSphere is the premium CRM for modern SaaS teams. Track clients, bulk upload data, and scale your business securely with our intelligent dashboard.
+            ClientSphere gives you a powerful, fast interface to create, view, and manage your customers — with bulk Excel import for massive datasets.
           </p>
           <div className="hero-actions">
-            <Link to="/dashboard" className="btn btn-primary btn-lg">Start Free Trial <ArrowRight size={18} /></Link>
-            <a href="#features" className="btn btn-ghost btn-lg">Explore Features</a>
-          </div>
-        </div>
-        <div className="hero-image-wrapper">
-          <div className="hero-image-glow"></div>
-          <div className="hero-image">
-            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80" alt="CRM Dashboard Preview" />
+            <Link to="/dashboard" className="btn btn-primary btn-lg">Open Dashboard <ArrowRight size={18} /></Link>
+            <a href="#features" className="btn btn-ghost btn-lg">See Features</a>
           </div>
         </div>
       </header>
 
       <section id="features" className="features-section">
         <div className="section-header">
-          <h2>Everything you need to grow</h2>
-          <p>Powerful features designed for performance and scale.</p>
+          <h2>Built for real customer management</h2>
+          <p>Everything you need to manage customers at any scale.</p>
         </div>
         <div className="features-grid">
           <div className="feature-card">
@@ -74,47 +65,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="pricing-section">
-         <div className="section-header">
-          <h2>Simple, transparent pricing</h2>
-          <p>No hidden fees. Scale as you grow.</p>
-        </div>
-        <div className="pricing-grid">
-          <div className="pricing-card">
-            <h3>Starter</h3>
-            <div className="price"><span>$</span>29<span>/mo</span></div>
-            <ul className="pricing-features">
-              <li><CheckCircle2 size={16} className="text-success" /> Up to 5,000 customers</li>
-              <li><CheckCircle2 size={16} className="text-success" /> Standard support</li>
-              <li><CheckCircle2 size={16} className="text-success" /> Basic analytics</li>
-            </ul>
-            <Link to="/dashboard" className="btn btn-ghost btn-full">Start Trial</Link>
-          </div>
-          <div className="pricing-card premium">
-            <div className="pricing-badge">Most Popular</div>
-            <h3>Professional</h3>
-            <div className="price"><span>$</span>99<span>/mo</span></div>
-            <ul className="pricing-features">
-              <li><CheckCircle2 size={16} className="text-accent" /> Up to 100,000 customers</li>
-              <li><CheckCircle2 size={16} className="text-accent" /> Priority 24/7 support</li>
-              <li><CheckCircle2 size={16} className="text-accent" /> Advanced analytics</li>
-              <li><CheckCircle2 size={16} className="text-accent" /> Bulk Excel uploads</li>
-            </ul>
-            <Link to="/dashboard" className="btn btn-primary btn-full">Start Trial</Link>
-          </div>
-          <div className="pricing-card">
-            <h3>Enterprise</h3>
-            <div className="price"><span>$</span>299<span>/mo</span></div>
-            <ul className="pricing-features">
-              <li><CheckCircle2 size={16} className="text-success" /> Unlimited customers</li>
-              <li><CheckCircle2 size={16} className="text-success" /> Dedicated success manager</li>
-              <li><CheckCircle2 size={16} className="text-success" /> Custom integrations</li>
-            </ul>
-            <Link to="/dashboard" className="btn btn-ghost btn-full">Contact Sales</Link>
-          </div>
-        </div>
-      </section>
-
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-brand">
@@ -128,25 +78,6 @@ export default function LandingPage() {
               <span>ClientSphere</span>
             </div>
             <p>The premium CRM solution for modern businesses scaling to the next level.</p>
-          </div>
-          <div className="footer-links">
-            <div className="footer-col">
-              <h4>Product</h4>
-              <a href="#">Features</a>
-              <a href="#">Pricing</a>
-              <a href="#">Changelog</a>
-            </div>
-            <div className="footer-col">
-              <h4>Company</h4>
-              <a href="#">About</a>
-              <a href="#">Blog</a>
-              <a href="#">Careers</a>
-            </div>
-            <div className="footer-col">
-              <h4>Legal</h4>
-              <a href="#">Privacy</a>
-              <a href="#">Terms</a>
-            </div>
           </div>
         </div>
         <div className="footer-bottom">
